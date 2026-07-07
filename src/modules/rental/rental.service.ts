@@ -54,6 +54,32 @@ const createRentalRequest = async (payload: ICreateRentalRequestPayload, tenantI
     return rentalRequest;
 }
 
+const getTenantRentalsHistory = async (tenantId: string) => {
+    const rentals = await prisma.rentalRequest.findMany({
+        where: {
+            tenantId,
+        },
+        include: {
+            property: {
+                include: {
+                    category: true,
+                    landlord: {
+                        omit: {
+                            password: true,
+                        },
+                    },
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+
+    return rentals;
+}
+
 export const rentalService = {
     createRentalRequest,
+    getTenantRentalsHistory,
 }
