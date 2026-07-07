@@ -4,10 +4,11 @@ import config from "./config";
 import cookieParser from "cookie-parser";
 import { authRouter } from "./modules/auth/auth.route";
 import { adminRouter } from "./modules/admin/admin.route";
+import { landlordRouter } from "./modules/landlord/landlord.route";
 import { categoryRouter } from "./modules/category/category.route";
+import { propertyRouter } from "./modules/property/property.route";
 import { notFound } from "./middleware/notFound";
 import { globalErrorHandler } from "./middleware/globalErrorHandler";
-import { landlordRouter } from "./modules/landlord/landlord.route";
 
 const app: Application = express();
 
@@ -26,8 +27,9 @@ app.get("/", async (req: Request, res: Response) => {
 
 app.use("/api/auth", authRouter)
 app.use("/api/admin", adminRouter)
-app.use("/api/categories", categoryRouter)
 app.use("/api/landlord", landlordRouter)
+app.use("/api/categories", categoryRouter)
+app.use("/api/properties", propertyRouter)
 
 app.use(notFound)
 app.use(globalErrorHandler)
