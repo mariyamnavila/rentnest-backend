@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import { ICreateRentalRequestPayload } from "./rental.interface";
+import { ICreateRentalRequestPayload, TUpdateRentalRequest } from "./rental.interface";
 import { RequestStatus } from "../../../generated/prisma/enums";
 
 const createRentalRequest = async (payload: ICreateRentalRequestPayload, tenantId: string) => {
@@ -127,8 +127,71 @@ const getRentalRequestById = async (id: string, tenantId: string) => {
     return rentalRequest;
 }
 
+const updateRentalRequest = async (
+    rentalRequestId: string,
+    tenantId: string,
+    payload: TUpdateRentalRequest
+) => {
+    const { startDate, endDate, message } = payload;
+
+    const rentalRequest = await prisma.rentalRequest.findUniqueOrThrow({
+        where: {
+            id: rentalRequestId,
+        },
+        include: {
+            property: true,
+        },
+    });
+
+    if (rentalRequest.tenantId !== tenantId) {
+        throw new Error("You do not have permission to update this rental request.");
+    }
+
+    if (rentalRequest.status !== RequestStatus.PENDING) {
+        throw new Error(`Cannot update a rental request that is already ${rentalRequest.status.toLowerCase()}.`);
+    }
+
+    const updateData: any = { message };
+
+    if (startDate || endDate) {
+        const start = startDate ? new Date(startDate) : rentalRequest.startDate;
+        const end = endDate ? new Date(endDate) : rentalRequest.endDate;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (start < today) {
+            throw new Error("Start date cannot be in the past.");
+        }
+
+        if (end <= start) {
+            throw new Error("End date must be after the start date.");
+        }
+
+        updateData.startDate = start;
+        updateData.endDate = end;
+    }
+
+    const updatedRequest = await prisma.rentalRequest.update({
+        where: {
+            id: rentalRequestId,
+        },
+        data: updateData,
+        include: {
+            property: true,
+            tenant: {
+                omit: {
+                    password: true,
+                },
+            },
+        },
+    });
+
+    return updatedRequest;
+}
+
 export const rentalService = {
     createRentalRequest,
     getTenantRentalsHistory,
     getRentalRequestById,
+    updateRentalRequest,
 }

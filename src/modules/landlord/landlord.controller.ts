@@ -21,10 +21,10 @@ const createProperty = catchAsync(async (req: Request, res: Response, next: Next
 
 const updateProperty = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const { propertyId } = req.params;
     const payload = req.body;
 
-    const result = await landlordService.updateProperty(id as string, landlordId as string, payload);
+    const result = await landlordService.updateProperty(propertyId as string, landlordId as string, payload);
 
     sendResponse(res, {
         success: true,
@@ -36,9 +36,9 @@ const updateProperty = catchAsync(async (req: Request, res: Response, next: Next
 
 const deleteProperty = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const { propertyId } = req.params;
 
-    const result = await landlordService.deleteProperty(id as string, landlordId as string);
+    const result = await landlordService.deleteProperty(propertyId as string, landlordId as string);
 
     sendResponse(res, {
         success: true,
@@ -63,10 +63,10 @@ const getLandlordRentalRequests = catchAsync(async (req: Request, res: Response,
 
 const updateRentalRequestStatus = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const { rentalRequestId } = req.params;
     const { status } = req.body;
 
-    const result = await landlordService.updateRentalRequestStatus(id as string, landlordId as string, status as RequestStatus);
+    const result = await landlordService.updateRentalRequestStatus(rentalRequestId as string, landlordId as string, status as RequestStatus);
 
     sendResponse(res, {
         success: true,
@@ -78,14 +78,14 @@ const updateRentalRequestStatus = catchAsync(async (req: Request, res: Response,
 
 const updatePropertyAvailability = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const { propertyId } = req.params;
     const { isAvailable } = req.body;
 
     if (typeof isAvailable !== "boolean") {
         throw new Error("isAvailable must be a boolean value.");
     }
 
-    const result = await landlordService.updatePropertyAvailability(id as string, landlordId as string, isAvailable);
+    const result = await landlordService.updatePropertyAvailability(propertyId as string, landlordId as string, isAvailable);
 
     sendResponse(res, {
         success: true,
@@ -97,9 +97,9 @@ const updatePropertyAvailability = catchAsync(async (req: Request, res: Response
 
 const completeRentalRequest = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
-    const { id } = req.params;
+    const { rentalRequestId } = req.params;
 
-    const result = await landlordService.completeRentalRequest(id as string, landlordId as string);
+    const result = await landlordService.completeRentalRequest(rentalRequestId as string, landlordId as string);
 
     sendResponse(res, {
         success: true,

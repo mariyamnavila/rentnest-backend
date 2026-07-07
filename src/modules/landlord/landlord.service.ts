@@ -219,6 +219,12 @@ const completeRentalRequest = async (requestId: string, landlordId: string) => {
         throw new Error("Only active rental requests can be marked as completed.");
     }
 
+    const today = new Date();
+
+    if (today < rentalRequest.endDate) {
+        throw new Error("This rental cannot be completed before the end date.");
+    }
+
     const [updatedRequest] = await prisma.$transaction([
         prisma.rentalRequest.update({
             where: {

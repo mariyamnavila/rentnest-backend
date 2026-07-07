@@ -4,3 +4,5 @@ export interface ICreateRentalRequestPayload {
     endDate: string;
     message?: string;
 }
+
+export type TUpdateRentalRequest = Partial<ICreateRentalRequestPayload>;

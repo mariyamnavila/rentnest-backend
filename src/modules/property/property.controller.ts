@@ -20,8 +20,8 @@ const getAllProperties = catchAsync(async (req: Request, res: Response, next: Ne
 })
 
 const getPropertyById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    const result = await propertyService.getPropertyById(id as string);
+    const { propertyId } = req.params;
+    const result = await propertyService.getPropertyById(propertyId as string);
 
     sendResponse(res, {
         success: true,

@@ -52,9 +52,9 @@ const getUserPaymentHistory = catchAsync(async (req: Request, res: Response, nex
 const getPaymentDetails = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
     const role = req.user?.role;
-    const { id } = req.params;
+    const { paymentId } = req.params;
 
-    const result = await paymentService.getPaymentDetails(id as string, userId as string, role as string);
+    const result = await paymentService.getPaymentDetails(paymentId as string, userId as string, role as string);
 
     sendResponse(res, {
         success: true,

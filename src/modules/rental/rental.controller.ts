@@ -33,9 +33,9 @@ const getTenantRentalsHistory = catchAsync(async (req: Request, res: Response, n
 
 const getRentalRequestById = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const tenantId = req.user?.id;
-    const { id } = req.params;
+    const { rentalRequestId } = req.params;
 
-    const result = await rentalService.getRentalRequestById(id as string, tenantId as string);
+    const result = await rentalService.getRentalRequestById(rentalRequestId as string, tenantId as string);
 
     sendResponse(res, {
         success: true,
@@ -45,8 +45,24 @@ const getRentalRequestById = catchAsync(async (req: Request, res: Response, next
     })
 })
 
+const updateRentalRequest = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const tenantId = req.user?.id;
+    const { rentalRequestId } = req.params;
+    const payload = req.body;
+
+    const result = await rentalService.updateRentalRequest(rentalRequestId as string, tenantId as string, payload);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Rental request updated successfully",
+        data: result
+    })
+})
+
 export const rentalController = {
     createRentalRequest,
     getTenantRentalsHistory,
     getRentalRequestById,
+    updateRentalRequest,
 }

@@ -30,10 +30,10 @@ const getAllCategories = catchAsync(async (req: Request, res: Response, next: Ne
 })
 
 const updateCategory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const { categoryId } = req.params;
     const { name } = req.body;
 
-    const result = await categoryService.updateCategory(id as string, name);
+    const result = await categoryService.updateCategory(categoryId as string, name);
 
     sendResponse(res, {
         success: true,
@@ -44,9 +44,9 @@ const updateCategory = catchAsync(async (req: Request, res: Response, next: Next
 })
 
 const deleteCategory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
+    const { categoryId } = req.params;
 
-    await categoryService.deleteCategory(id as string);
+    await categoryService.deleteCategory(categoryId as string);
 
     sendResponse(res, {
         success: true,

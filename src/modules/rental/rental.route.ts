@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/", auth(UserRole.TENANT), rentalController.createRentalRequest);
 router.get("/", auth(UserRole.TENANT), rentalController.getTenantRentalsHistory);
-router.get("/:id", auth(UserRole.TENANT), rentalController.getRentalRequestById);
+router.get("/:rentalRequestId", auth(UserRole.TENANT), rentalController.getRentalRequestById);
+router.patch("/:rentalRequestId", auth(UserRole.TENANT), rentalController.updateRentalRequest);
 
 export const rentalRouter = router;
