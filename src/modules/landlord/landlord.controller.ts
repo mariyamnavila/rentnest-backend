@@ -76,10 +76,30 @@ const updateRentalRequestStatus = catchAsync(async (req: Request, res: Response,
     })
 })
 
+const updatePropertyAvailability = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const landlordId = req.user?.id;
+    const { id } = req.params;
+    const { isAvailable } = req.body;
+
+    if (typeof isAvailable !== "boolean") {
+        throw new Error("isAvailable must be a boolean value.");
+    }
+
+    const result = await landlordService.updatePropertyAvailability(id as string, landlordId as string, isAvailable);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Property availability status updated successfully",
+        data: result
+    })
+})
+
 export const landlordController = {
     createProperty,
     updateProperty,
     deleteProperty,
     getLandlordRentalRequests,
     updateRentalRequestStatus,
+    updatePropertyAvailability,
 }

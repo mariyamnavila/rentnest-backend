@@ -1,10 +1,11 @@
 import { prisma } from "../../lib/prisma";
-import { ICreatePropertyPayload, TUpdateProperty } from "./landlord.interface";
+import { ICreatePropertyPayload } from "./landlord.interface";
 import { RequestStatus } from "../../../generated/prisma/enums";
 
 const createProperty = async (payload: ICreatePropertyPayload, landlordId: string) => {
     const { categoryId } = payload;
 
+    // Verify category exists
     await prisma.category.findUniqueOrThrow({
         where: {
             id: categoryId,
@@ -32,7 +33,7 @@ const createProperty = async (payload: ICreatePropertyPayload, landlordId: strin
 const updateProperty = async (
     propertyId: string,
     landlordId: string,
-    payload: TUpdateProperty
+    payload: Partial<ICreatePropertyPayload>
 ) => {
     const property = await prisma.property.findUniqueOrThrow({
         where: {
@@ -165,10 +166,46 @@ const updateRentalRequestStatus = async (
     return updatedRequest;
 }
 
+const updatePropertyAvailability = async (
+    propertyId: string,
+    landlordId: string,
+    isAvailable: boolean
+) => {
+    const property = await prisma.property.findUniqueOrThrow({
+        where: {
+            id: propertyId,
+        },
+    });
+
+    if (property.landlordId !== landlordId) {
+        throw new Error("You do not have permission to update this property availability.");
+    }
+
+    const updatedProperty = await prisma.property.update({
+        where: {
+            id: propertyId,
+        },
+        data: {
+            isAvailable,
+        },
+        include: {
+            category: true,
+            landlord: {
+                omit: {
+                    password: true,
+                },
+            },
+        },
+    });
+
+    return updatedProperty;
+}
+
 export const landlordService = {
     createProperty,
     updateProperty,
     deleteProperty,
     getLandlordRentalRequests,
     updateRentalRequestStatus,
+    updatePropertyAvailability,
 }

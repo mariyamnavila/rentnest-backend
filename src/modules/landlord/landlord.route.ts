@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/properties", auth(UserRole.LANDLORD), landlordController.createProperty);
 router.patch("/properties/:id", auth(UserRole.LANDLORD), landlordController.updateProperty);
+router.patch("/properties/:id/availability", auth(UserRole.LANDLORD), landlordController.updatePropertyAvailability);
 router.delete("/properties/:id", auth(UserRole.LANDLORD), landlordController.deleteProperty);
 router.get("/requests", auth(UserRole.LANDLORD), landlordController.getLandlordRentalRequests);
 router.patch("/requests/:id", auth(UserRole.LANDLORD), landlordController.updateRentalRequestStatus);
