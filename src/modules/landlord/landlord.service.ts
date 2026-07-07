@@ -219,13 +219,21 @@ const completeRentalRequest = async (requestId: string, landlordId: string) => {
         throw new Error("Only active rental requests can be marked as completed.");
     }
 
-    await prisma.$transaction([
+    const [updatedRequest] = await prisma.$transaction([
         prisma.rentalRequest.update({
             where: {
                 id: requestId,
             },
             data: {
                 status: RequestStatus.COMPLETED,
+            },
+            include: {
+                property: true,
+                tenant: {
+                    omit: {
+                        password: true,
+                    },
+                },
             },
         }),
         prisma.property.update({
@@ -238,7 +246,7 @@ const completeRentalRequest = async (requestId: string, landlordId: string) => {
         }),
     ]);
 
-    return { message: "Rental request marked as completed and property is now available." };
+    return updatedRequest;
 }
 
 export const landlordService = {
