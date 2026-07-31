@@ -30,6 +30,17 @@ const createRentalRequest = async (payload: ICreateRentalRequestPayload, tenantI
         throw new Error("This property is currently not available for rent.");
     }
 
+    const activeRental = await prisma.rentalRequest.findFirst({
+        where: {
+            propertyId,
+            status: RequestStatus.ACTIVE,
+        },
+    });
+
+    if (activeRental) {
+        throw new Error("This property already has an active rental and is currently occupied.");
+    }
+
     if (property.landlordId === tenantId) {
         throw new Error("Landlords cannot submit rental requests for their own properties.");
     }

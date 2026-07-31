@@ -26,17 +26,18 @@ const createCheckoutSession = async (rentalRequestId: string, tenantId: string) 
     }
 
     // 3. Cost calculation (months * monthly property price)
-    const start = rentalRequest.startDate;
-    const end = rentalRequest.endDate;
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-    const yearsDiff = end.getFullYear() - start.getFullYear();
-    const monthsDiff = end.getMonth() - start.getMonth();
-    const daysDiff = end.getDate() - start.getDate();
+    const start = new Date(rentalRequest.startDate);
+    const end = new Date(rentalRequest.endDate);
 
-    let durationInMonths = (yearsDiff * 12) + monthsDiff + (daysDiff / 30);
-    durationInMonths = Math.max(0.1, durationInMonths);
+    // +1 if you want both start and end dates to be charged
+    const totalDays =
+        Math.ceil((end.getTime() - start.getTime()) / MS_PER_DAY);
 
-    const amount = Math.round(durationInMonths * rentalRequest.property.price * 100) / 100;
+    const dailyRate = rentalRequest.property.price / 30;
+
+    const amount = Number((dailyRate * totalDays).toFixed(2));
 
     // 4. Create Stripe checkout session
     const appUrl = config.app_url || "http://localhost:3000";
@@ -131,14 +132,14 @@ const handleWebhook = async (rawBody: string | Buffer, signature: string) => {
                     status: RequestStatus.ACTIVE,
                 },
             }),
-            prisma.property.update({
-                where: {
-                    id: rentalRequest.propertyId,
-                },
-                data: {
-                    isAvailable: false,
-                },
-            }),
+            // prisma.property.update({
+            //     where: {
+            //         id: rentalRequest.propertyId,
+            //     },
+            //     data: {
+            //         isAvailable: false,
+            //     },
+            // }),
         ]);
     }
 

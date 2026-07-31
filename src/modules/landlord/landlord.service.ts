@@ -242,14 +242,14 @@ const completeRentalRequest = async (requestId: string, landlordId: string) => {
                 },
             },
         }),
-        prisma.property.update({
-            where: {
-                id: rentalRequest.propertyId,
-            },
-            data: {
-                isAvailable: true,
-            },
-        }),
+        // prisma.property.update({
+        //     where: {
+        //         id: rentalRequest.propertyId,
+        //     },
+        //     data: {
+        //         isAvailable: true,
+        //     },
+        // }),
     ]);
 
     return updatedRequest;

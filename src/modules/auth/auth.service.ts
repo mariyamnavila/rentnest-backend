@@ -59,11 +59,15 @@ const registerUserIntoDB = async (payload: IRegisterUser) => {
 const loginUser = async (payload: ILoginUser) => {
     const { email, password } = payload;
 
-    const user = await prisma.user.findUniqueOrThrow({
+    const user = await prisma.user.findUnique({
         where: {
             email,
         },
     });
+
+    if (!user) {
+        throw new Error("Invalid email or password.");
+    }
 
     if (user.status === "BANNED") {
         throw new Error("Your account has been banned. Please contact support to reactive.")
@@ -72,7 +76,7 @@ const loginUser = async (payload: ILoginUser) => {
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatched) {
-        throw new Error("Password is incorrect");
+        throw new Error("Invalid email or password.");
     }
 
     const jwtPayload = {
