@@ -200,9 +200,71 @@ const updateRentalRequest = async (
     return updatedRequest;
 }
 
+const getRentalStats = async (tenantId: string) => {
+    const total = await prisma.rentalRequest.count({
+        where: { tenantId },
+    });
+
+    const pending = await prisma.rentalRequest.count({
+        where: {
+            tenantId,
+            status: RequestStatus.PENDING,
+        },
+    });
+
+    const approved = await prisma.rentalRequest.count({
+        where: {
+            tenantId,
+            status: RequestStatus.APPROVED,
+        },
+    });
+
+    const rejected = await prisma.rentalRequest.count({
+        where: {
+            tenantId,
+            status: RequestStatus.REJECTED,
+        },
+    });
+
+    const active = await prisma.rentalRequest.count({
+        where: {
+            tenantId,
+            status: RequestStatus.ACTIVE,
+        },
+    });
+
+    const completed = await prisma.rentalRequest.count({
+        where: {
+            tenantId,
+            status: RequestStatus.COMPLETED,
+        },
+    });
+
+    const payment = await prisma.payment.aggregate({
+        where: {
+            tenantId,
+            status: "COMPLETED",
+        },
+        _sum: {
+            amount: true,
+        },
+    });
+
+    return {
+        total,
+        pending,
+        approved,
+        rejected,
+        active,
+        completed,
+        totalSpent: payment._sum.amount ?? 0,
+    };
+};
+
 export const rentalService = {
     createRentalRequest,
     getTenantRentalsHistory,
     getRentalRequestById,
     updateRentalRequest,
+    getRentalStats,
 }

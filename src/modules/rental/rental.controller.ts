@@ -60,9 +60,23 @@ const updateRentalRequest = catchAsync(async (req: Request, res: Response, next:
     })
 })
 
+const getRentalStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const tenantId = req.user?.id;
+
+    const result = await rentalService.getRentalStats(tenantId as string);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Rental stats retrieved successfully",
+        data: result
+    })
+})
+
 export const rentalController = {
     createRentalRequest,
     getTenantRentalsHistory,
     getRentalRequestById,
     updateRentalRequest,
+    getRentalStats,
 }
