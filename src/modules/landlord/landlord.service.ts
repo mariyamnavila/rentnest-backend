@@ -2,6 +2,89 @@ import { prisma } from "../../lib/prisma";
 import { ICreatePropertyPayload } from "./landlord.interface";
 import { RequestStatus } from "../../../generated/prisma/enums";
 
+const getLandlordProperties = async (landlordId: string) => {
+    const properties = await prisma.property.findMany({
+        where: {
+            landlordId,
+        },
+        include: {
+            category: true,
+            landlord: {
+                omit: {
+                    password: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+
+    return properties;
+};
+
+const getLandlordStats = async (landlordId: string) => {
+    const totalProperties = await prisma.property.count({
+        where: { landlordId },
+    });
+
+    const totalRequests = await prisma.rentalRequest.count({
+        where: {
+            property: { landlordId },
+        },
+    });
+
+    const pending = await prisma.rentalRequest.count({
+        where: {
+            property: { landlordId },
+            status: RequestStatus.PENDING,
+        },
+    });
+
+    const approved = await prisma.rentalRequest.count({
+        where: {
+            property: { landlordId },
+            status: RequestStatus.APPROVED,
+        },
+    });
+
+    const active = await prisma.rentalRequest.count({
+        where: {
+            property: { landlordId },
+            status: RequestStatus.ACTIVE,
+        },
+    });
+
+    const completed = await prisma.rentalRequest.count({
+        where: {
+            property: { landlordId },
+            status: RequestStatus.COMPLETED,
+        },
+    });
+
+    const payment = await prisma.payment.aggregate({
+        where: {
+            rentalRequest: {
+                property: { landlordId },
+            },
+            status: "COMPLETED",
+        },
+        _sum: {
+            amount: true,
+        },
+    });
+
+    return {
+        totalProperties,
+        totalRequests,
+        pending,
+        approved,
+        active,
+        completed,
+        totalEarnings: payment._sum.amount ?? 0,
+    };
+};
+
 const createProperty = async (payload: ICreatePropertyPayload, landlordId: string) => {
     const { categoryId } = payload;
 
@@ -256,6 +339,8 @@ const completeRentalRequest = async (requestId: string, landlordId: string) => {
 }
 
 export const landlordService = {
+    getLandlordProperties,
+    getLandlordStats,
     createProperty,
     updateProperty,
     deleteProperty,

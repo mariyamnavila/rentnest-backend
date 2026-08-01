@@ -5,6 +5,32 @@ import sendResponse from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { RequestStatus } from "../../../generated/prisma/enums";
 
+const getLandlordProperties = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const landlordId = req.user?.id;
+
+    const result = await landlordService.getLandlordProperties(landlordId as string);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Properties retrieved successfully",
+        data: result
+    })
+})
+
+const getLandlordStats = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const landlordId = req.user?.id;
+
+    const result = await landlordService.getLandlordStats(landlordId as string);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Stats retrieved successfully",
+        data: result
+    })
+})
+
 const createProperty = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
     const payload = req.body;
@@ -110,6 +136,8 @@ const completeRentalRequest = catchAsync(async (req: Request, res: Response, nex
 })
 
 export const landlordController = {
+    getLandlordProperties,
+    getLandlordStats,
     createProperty,
     updateProperty,
     deleteProperty,
