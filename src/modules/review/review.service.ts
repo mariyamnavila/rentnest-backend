@@ -60,6 +60,30 @@ const createReview = async (payload: ICreateReviewPayload, tenantId: string) => 
     return review;
 }
 
+const getMyReviews = async (tenantId: string) => {
+    const reviews = await prisma.review.findMany({
+        where: {
+            tenantId,
+        },
+        include: {
+            property: {
+                select: {
+                    id: true,
+                    title: true,
+                    location: true,
+                    price: true,
+                },
+            },
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
+    });
+
+    return reviews;
+}
+
 export const reviewService = {
     createReview,
+    getMyReviews,
 }
