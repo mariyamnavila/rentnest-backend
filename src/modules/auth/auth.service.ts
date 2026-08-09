@@ -73,6 +73,10 @@ const loginUser = async (payload: ILoginUser) => {
         throw new Error("Your account has been banned. Please contact support to reactive.")
     }
 
+    if (!user.password) {
+        throw new Error("This account was registered using Google login. Please sign in with Google.");
+    }
+
     const isPasswordMatched = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatched) {
@@ -100,6 +104,73 @@ const loginUser = async (payload: ILoginUser) => {
 
     return { accessToken, refreshToken };
 }
+
+const socialLoginUser = async (payload: {
+    email: string;
+    name: string;
+    profileImage?: string;
+    provider?: "GOOGLE";
+    providerId?: string;
+    role?: UserRole;
+}) => {
+    const { email, name, profileImage, provider, providerId, role } = payload;
+
+    if (!email) {
+        throw new Error("Email is required for social login.");
+    }
+
+    let user = await prisma.user.findUnique({
+        where: { email },
+    });
+
+    if (user && user.status === "BANNED") {
+        throw new Error("Your account has been banned. Please contact support.");
+    }
+
+    if (!user) {
+        const userRole = (role === UserRole.LANDLORD || role === UserRole.TENANT) ? role : UserRole.TENANT;
+        user = await prisma.user.create({
+            data: {
+                email,
+                name: name || "RentNest User",
+                profileImage: profileImage || null,
+                role: userRole,
+                googleId: provider === "GOOGLE" ? providerId : null,
+            },
+        });
+    } else {
+        if (provider === "GOOGLE" && (!user.googleId || !user.profileImage)) {
+            user = await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    googleId: providerId || user.googleId,
+                    profileImage: user.profileImage || profileImage,
+                },
+            });
+        }
+    }
+
+    const jwtPayload = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+    };
+
+    const accessToken = jwtUtils.createToken(
+        jwtPayload,
+        config.jwt_access_secret,
+        config.jwt_access_expires_in as SignOptions,
+    );
+
+    const refreshToken = jwtUtils.createToken(
+        jwtPayload,
+        config.jwt_refresh_secret,
+        config.jwt_refresh_expires_in as SignOptions,
+    );
+
+    return { user, accessToken, refreshToken };
+};
 
 const refreshToken = async (refreshToken: string) => {
     const verifiedRefreshToken = jwtUtils.verifyToken(refreshToken, config.jwt_refresh_secret);
@@ -190,6 +261,7 @@ const updateCurrentUser = async (userId: string, payload: IUpdateUser) => {
 export const authService = {
     registerUserIntoDB,
     loginUser,
+    socialLoginUser,
     refreshToken,
     getCurrentUser,
     updateCurrentUser,

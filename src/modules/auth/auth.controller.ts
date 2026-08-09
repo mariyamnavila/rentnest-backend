@@ -43,6 +43,31 @@ const loginUser = catchAsync(async (req: Request, res: Response, next: NextFunct
     });
 })
 
+const socialLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    const payload = req.body;
+    const { user, accessToken, refreshToken } = await authService.socialLoginUser(payload);
+
+    res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 1000 * 60 * 60 * 24
+    })
+    res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    })
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Social login successful",
+        data: { user, accessToken, refreshToken }
+    });
+})
+
 const refreshToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const refreshToken = req.cookies.refreshToken;
 
@@ -96,6 +121,7 @@ const updateCurrentUser = catchAsync(async (req: Request, res: Response, next: N
 export const authController = {
     registerUser,
     loginUser,
+    socialLogin,
     refreshToken,
     getCurrentUser,
     updateCurrentUser,
