@@ -2,11 +2,40 @@ import { prisma } from "../../lib/prisma";
 import { ICreatePropertyPayload } from "./landlord.interface";
 import { RequestStatus } from "../../../generated/prisma/enums";
 
-const getLandlordProperties = async (landlordId: string) => {
+const getLandlordProperties = async (landlordId: string, search?: string, page?: number, limit?: number, categoryId?: string, isAvailable?: string, sortBy?: string) => {
+    const where: any = { landlordId };
+
+    if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        where.OR = [
+            { title: { contains: q, mode: "insensitive" } },
+            { location: { contains: q, mode: "insensitive" } },
+        ];
+    }
+
+    if (categoryId && categoryId !== 'ALL') {
+        where.categoryId = categoryId;
+    }
+
+    if (isAvailable === 'AVAILABLE') {
+        where.isAvailable = true;
+    } else if (isAvailable === 'UNAVAILABLE') {
+        where.isAvailable = false;
+    }
+
+    const currentPage = Math.max(1, page || 1);
+    const perPage = Math.min(50, Math.max(1, limit || 10));
+    const skip = (currentPage - 1) * perPage;
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === 'price-asc') orderBy = { price: 'asc' };
+    else if (sortBy === 'price-desc') orderBy = { price: 'desc' };
+    else if (sortBy === 'title-asc') orderBy = { title: 'asc' };
+
+    const total = await prisma.property.count({ where });
+
     const properties = await prisma.property.findMany({
-        where: {
-            landlordId,
-        },
+        where,
         include: {
             category: true,
             landlord: {
@@ -15,12 +44,20 @@ const getLandlordProperties = async (landlordId: string) => {
                 },
             },
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy,
+        skip,
+        take: perPage,
     });
 
-    return properties;
+    return {
+        properties,
+        meta: {
+            total,
+            page: currentPage,
+            limit: perPage,
+            totalPages: Math.ceil(total / perPage),
+        },
+    };
 };
 
 const getLandlordStats = async (landlordId: string) => {
@@ -175,13 +212,40 @@ const deleteProperty = async (propertyId: string, landlordId: string) => {
     return deletedProperty;
 }
 
-const getLandlordRentalRequests = async (landlordId: string) => {
-    const requests = await prisma.rentalRequest.findMany({
-        where: {
-            property: {
-                landlordId,
-            },
+const getLandlordRentalRequests = async (landlordId: string, search?: string, page?: number, limit?: number, status?: string, sortBy?: string) => {
+    const where: any = {
+        property: {
+            landlordId,
         },
+    };
+
+    if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        where.OR = [
+            { property: { title: { contains: q, mode: "insensitive" } } },
+            { property: { location: { contains: q, mode: "insensitive" } } },
+            { tenant: { name: { contains: q, mode: "insensitive" } } },
+            { tenant: { email: { contains: q, mode: "insensitive" } } },
+        ];
+    }
+
+    if (status && status !== 'ALL') {
+        where.status = status;
+    }
+
+    const currentPage = Math.max(1, page || 1);
+    const perPage = Math.min(50, Math.max(1, limit || 10));
+    const skip = (currentPage - 1) * perPage;
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === 'price-asc') orderBy = { property: { price: 'asc' } };
+    else if (sortBy === 'price-desc') orderBy = { property: { price: 'desc' } };
+    else if (sortBy === 'start-date') orderBy = { startDate: 'asc' };
+
+    const total = await prisma.rentalRequest.count({ where });
+
+    const requests = await prisma.rentalRequest.findMany({
+        where,
         include: {
             property: {
                 include: {
@@ -195,12 +259,20 @@ const getLandlordRentalRequests = async (landlordId: string) => {
             },
             payments: true,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy,
+        skip,
+        take: perPage,
     });
 
-    return requests;
+    return {
+        requests,
+        meta: {
+            total,
+            page: currentPage,
+            limit: perPage,
+            totalPages: Math.ceil(total / perPage),
+        },
+    };
 }
 
 const updateRentalRequestStatus = async (

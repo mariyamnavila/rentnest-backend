@@ -20,14 +20,23 @@ const createRentalRequest = catchAsync(async (req: Request, res: Response, next:
 
 const getTenantRentalsHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const tenantId = req.user?.id;
+    const { search, page, limit, status, sortBy } = req.query;
 
-    const result = await rentalService.getTenantRentalsHistory(tenantId as string);
+    const result = await rentalService.getTenantRentalsHistory(
+        tenantId as string,
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        status as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Rental requests history retrieved successfully",
-        data: result
+        data: result.rentals,
+        meta: result.meta,
     })
 })
 

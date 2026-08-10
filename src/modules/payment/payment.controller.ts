@@ -38,14 +38,24 @@ const handleWebhook = catchAsync(async (req: Request, res: Response, next: NextF
 const getUserPaymentHistory = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
     const role = req.user?.role;
+    const { search, page, limit, status, sortBy } = req.query;
 
-    const result = await paymentService.getUserPaymentHistory(userId as string, role as string);
+    const result = await paymentService.getUserPaymentHistory(
+        userId as string,
+        role as string,
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        status as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Payment history retrieved successfully",
-        data: result
+        data: result.payments,
+        meta: result.meta,
     })
 })
 

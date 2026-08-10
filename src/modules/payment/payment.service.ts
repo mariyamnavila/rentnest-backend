@@ -146,7 +146,7 @@ const handleWebhook = async (rawBody: string | Buffer, signature: string) => {
     return { received: true };
 }
 
-const getUserPaymentHistory = async (userId: string, role: string) => {
+const getUserPaymentHistory = async (userId: string, role: string, search?: string, page?: number, limit?: number, status?: string, sortBy?: string) => {
     const andConditions: any[] = [];
 
     if (role === "TENANT") {
@@ -160,6 +160,34 @@ const getUserPaymentHistory = async (userId: string, role: string) => {
             },
         });
     }
+
+    if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        andConditions.push({
+            OR: [
+                { rentalRequest: { property: { title: { contains: q, mode: "insensitive" } } } },
+                { rentalRequest: { property: { location: { contains: q, mode: "insensitive" } } } },
+            ],
+        });
+    }
+
+    if (status && status !== 'ALL') {
+        andConditions.push({ status });
+    }
+
+    const currentPage = Math.max(1, page || 1);
+    const perPage = Math.min(50, Math.max(1, limit || 10));
+    const skip = (currentPage - 1) * perPage;
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === 'amount-asc') orderBy = { amount: 'asc' };
+    else if (sortBy === 'amount-desc') orderBy = { amount: 'desc' };
+
+    const total = await prisma.payment.count({
+        where: {
+            AND: andConditions,
+        },
+    });
 
     const payments = await prisma.payment.findMany({
         where: {
@@ -177,12 +205,20 @@ const getUserPaymentHistory = async (userId: string, role: string) => {
                 },
             },
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy,
+        skip,
+        take: perPage,
     });
 
-    return payments;
+    return {
+        payments,
+        meta: {
+            total,
+            page: currentPage,
+            limit: perPage,
+            totalPages: Math.ceil(total / perPage),
+        },
+    };
 }
 
 const getPaymentDetails = async (id: string, userId: string, role: string) => {

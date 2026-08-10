@@ -7,14 +7,24 @@ import { RequestStatus } from "../../../generated/prisma/enums";
 
 const getLandlordProperties = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
+    const { search, page, limit, categoryId, isAvailable, sortBy } = req.query;
 
-    const result = await landlordService.getLandlordProperties(landlordId as string);
+    const result = await landlordService.getLandlordProperties(
+        landlordId as string,
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        categoryId as string | undefined,
+        isAvailable as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Properties retrieved successfully",
-        data: result
+        data: result.properties,
+        meta: result.meta,
     })
 })
 
@@ -76,14 +86,23 @@ const deleteProperty = catchAsync(async (req: Request, res: Response, next: Next
 
 const getLandlordRentalRequests = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const landlordId = req.user?.id;
+    const { search, page, limit, status, sortBy } = req.query;
 
-    const result = await landlordService.getLandlordRentalRequests(landlordId as string);
+    const result = await landlordService.getLandlordRentalRequests(
+        landlordId as string,
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        status as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Rental requests retrieved successfully",
-        data: result
+        data: result.requests,
+        meta: result.meta,
     })
 })
 

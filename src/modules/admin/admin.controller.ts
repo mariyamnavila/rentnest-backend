@@ -37,24 +37,41 @@ const updateUserStatus = catchAsync(async (req: Request, res: Response, next: Ne
 })
 
 const getAllProperties = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const result = await adminService.getAllProperties();
+    const { search, page, limit, categoryId, isAvailable, sortBy } = req.query;
+    const result = await adminService.getAllProperties(
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        categoryId as string | undefined,
+        isAvailable as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Properties retrieved successfully",
-        data: result
+        data: result.properties,
+        meta: result.meta,
     })
 })
 
 const getAllRentals = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-    const result = await adminService.getAllRentals();
+    const { search, page, limit, status, sortBy } = req.query;
+    const result = await adminService.getAllRentals(
+        search as string | undefined,
+        page ? Number(page) : undefined,
+        limit ? Number(limit) : undefined,
+        status as string | undefined,
+        sortBy as string | undefined
+    );
 
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: "Rental requests retrieved successfully",
-        data: result
+        data: result.rentals,
+        meta: result.meta,
     })
 })
 

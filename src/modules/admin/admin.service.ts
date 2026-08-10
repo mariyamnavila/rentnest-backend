@@ -73,8 +73,42 @@ const updateUserStatus = async (id: string, status: UserStatus) => {
     return updatedUser;
 }
 
-const getAllProperties = async () => {
+const getAllProperties = async (search?: string, page?: number, limit?: number, categoryId?: string, isAvailable?: string, sortBy?: string) => {
+    const where: any = {};
+
+    if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        where.OR = [
+            { title: { contains: q, mode: "insensitive" } },
+            { location: { contains: q, mode: "insensitive" } },
+            { landlord: { name: { contains: q, mode: "insensitive" } } },
+        ];
+    }
+
+    if (categoryId && categoryId !== 'ALL') {
+        where.categoryId = categoryId;
+    }
+
+    if (isAvailable === 'AVAILABLE') {
+        where.isAvailable = true;
+    } else if (isAvailable === 'UNAVAILABLE') {
+        where.isAvailable = false;
+    }
+
+    const currentPage = Math.max(1, page || 1);
+    const perPage = Math.min(50, Math.max(1, limit || 10));
+    const skip = (currentPage - 1) * perPage;
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === 'price-asc') orderBy = { price: 'asc' };
+    else if (sortBy === 'price-desc') orderBy = { price: 'desc' };
+    else if (sortBy === 'title-asc') orderBy = { title: 'asc' };
+    else if (sortBy === 'title-desc') orderBy = { title: 'desc' };
+
+    const total = await prisma.property.count({ where });
+
     const properties = await prisma.property.findMany({
+        where,
         include: {
             category: true,
             landlord: {
@@ -84,16 +118,51 @@ const getAllProperties = async () => {
             },
             reviews: true,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy,
+        skip,
+        take: perPage,
     });
 
-    return properties;
+    return {
+        properties,
+        meta: {
+            total,
+            page: currentPage,
+            limit: perPage,
+            totalPages: Math.ceil(total / perPage),
+        },
+    };
 }
 
-const getAllRentals = async () => {
+const getAllRentals = async (search?: string, page?: number, limit?: number, status?: string, sortBy?: string) => {
+    const where: any = {};
+
+    if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        where.OR = [
+            { property: { title: { contains: q, mode: "insensitive" } } },
+            { tenant: { name: { contains: q, mode: "insensitive" } } },
+            { property: { landlord: { name: { contains: q, mode: "insensitive" } } } },
+        ];
+    }
+
+    if (status && status !== 'ALL') {
+        where.status = status;
+    }
+
+    const currentPage = Math.max(1, page || 1);
+    const perPage = Math.min(50, Math.max(1, limit || 10));
+    const skip = (currentPage - 1) * perPage;
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === 'price-asc') orderBy = { property: { price: 'asc' } };
+    else if (sortBy === 'price-desc') orderBy = { property: { price: 'desc' } };
+    else if (sortBy === 'start-date') orderBy = { startDate: 'asc' };
+
+    const total = await prisma.rentalRequest.count({ where });
+
     const rentals = await prisma.rentalRequest.findMany({
+        where,
         include: {
             tenant: {
                 omit: {
@@ -112,12 +181,20 @@ const getAllRentals = async () => {
             },
             payments: true,
         },
-        orderBy: {
-            createdAt: "desc",
-        },
+        orderBy,
+        skip,
+        take: perPage,
     });
 
-    return rentals;
+    return {
+        rentals,
+        meta: {
+            total,
+            page: currentPage,
+            limit: perPage,
+            totalPages: Math.ceil(total / perPage),
+        },
+    };
 }
 
 const getAdminStats = async () => {
