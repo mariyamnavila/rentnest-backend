@@ -60,27 +60,74 @@ const createReview = async (payload: ICreateReviewPayload, tenantId: string) => 
     return review;
 }
 
-const getMyReviews = async (tenantId: string) => {
-    const reviews = await prisma.review.findMany({
-        where: {
-            tenantId,
-        },
-        include: {
-            property: {
-                select: {
-                    id: true,
-                    title: true,
-                    location: true,
-                    price: true,
+const getMyReviews = async (
+    tenantId: string,
+    search?: string,
+    page: number = 1,
+    limit: number = 5,
+    rating?: number,
+    sortBy: string = "newest"
+) => {
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+        tenantId,
+    };
+
+    if (search) {
+        where.property = {
+            OR: [
+                { title: { contains: search, mode: "insensitive" } },
+                { location: { contains: search, mode: "insensitive" } },
+            ],
+        };
+    }
+
+    if (rating && rating !== 0) {
+        where.rating = rating;
+    }
+
+    let orderBy: any = { createdAt: "desc" };
+    if (sortBy === "rating-desc") {
+        orderBy = { rating: "desc" };
+    } else if (sortBy === "rating-asc") {
+        orderBy = { rating: "asc" };
+    } else if (sortBy === "oldest") {
+        orderBy = { createdAt: "asc" };
+    }
+
+    const [reviews, total] = await Promise.all([
+        prisma.review.findMany({
+            where,
+            include: {
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        price: true,
+                        images: true,
+                    },
                 },
             },
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+            orderBy,
+            skip,
+            take: limit,
+        }),
+        prisma.review.count({ where }),
+    ]);
 
-    return reviews;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        data: reviews,
+        meta: {
+            total,
+            page,
+            limit,
+            totalPages,
+        },
+    };
 }
 
 export const reviewService = {
