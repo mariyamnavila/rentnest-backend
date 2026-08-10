@@ -48,7 +48,7 @@ async function main() {
         },
     });
 
-    console.log("✅ Demo accounts seeded (Admin, Landlord, Tenant)");
+    // console.log("✅ Demo accounts seeded (Admin, Landlord, Tenant)");
 }
 
 main()

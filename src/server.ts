@@ -8,12 +8,12 @@ async function main() {
     try {
 
         await prisma.$connect();
-        console.log('Connected to the database successfully');
+        // console.log('Connected to the database successfully');
         app.listen(PORT, () => {
-            console.log(`RentNest Server is running on port ${PORT}`);
+            // console.log(`RentNest Server is running on port ${PORT}`);
         });
     } catch (error) {
-        console.error("Error starting server:", error);
+        // console.error("Error starting server:", error);
         await prisma.$disconnect();
         process.exit(1);
     }

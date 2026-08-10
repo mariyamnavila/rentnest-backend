@@ -105,7 +105,6 @@ const getCurrentUser = catchAsync(async (req: Request, res: Response, next: Next
 
 const updateCurrentUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id;
-    console.log(req.user?.id);
     const payload = req.body;
 
     const result = await authService.updateCurrentUser(userId as string, payload);
