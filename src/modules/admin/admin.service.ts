@@ -5,12 +5,30 @@ const getAllUsers = async (search?: string, page?: number, limit?: number) => {
     const where: any = {};
 
     if (search && search.trim()) {
-        const q = search.trim().toLowerCase();
+        const q = search.trim();
+
         where.OR = [
-            { name: { contains: q, mode: "insensitive" } },
-            { email: { contains: q, mode: "insensitive" } },
-            { role: { contains: q, mode: "insensitive" } },
+            {
+                name: {
+                    contains: q,
+                    mode: "insensitive",
+                },
+            },
+            {
+                email: {
+                    contains: q,
+                    mode: "insensitive",
+                },
+            },
         ];
+
+        const role = q.toUpperCase();
+
+        if (["ADMIN", "TENANT", "LANDLORD"].includes(role)) {
+            where.OR.push({
+                role,
+            });
+        }
     }
 
     const currentPage = Math.max(1, page || 1);

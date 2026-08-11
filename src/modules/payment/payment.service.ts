@@ -180,8 +180,15 @@ const getUserPaymentHistory = async (userId: string, role: string, search?: stri
     const skip = (currentPage - 1) * perPage;
 
     let orderBy: any = { createdAt: "desc" };
-    if (sortBy === 'amount-asc') orderBy = { amount: 'asc' };
-    else if (sortBy === 'amount-desc') orderBy = { amount: 'desc' };
+    if (sortBy === "newest") {
+        orderBy = { createdAt: "desc" };
+    } else if (sortBy === "oldest") {
+        orderBy = { createdAt: "asc" };
+    } else if (sortBy === "amount-asc") {
+        orderBy = { amount: "asc" };
+    } else if (sortBy === "amount-desc") {
+        orderBy = { amount: "desc" };
+    }
 
     const total = await prisma.payment.count({
         where: {

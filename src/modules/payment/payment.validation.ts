@@ -12,7 +12,7 @@ const getPaymentHistory = z.object({
         page: z.string().optional(),
         limit: z.string().optional(),
         status: z.string().optional(),
-        sortBy: z.enum(["amount-asc", "amount-desc"]).optional(),
+        sortBy: z.enum(["newest", "oldest", "amount-asc", "amount-desc"]).optional(),
     }),
 });
 
